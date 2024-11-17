@@ -10,7 +10,7 @@ import styles from "./commentmodal.module.css";
 import { SubmitButton } from "../SubmitButton";
 import { Subheading } from "../Subheading";
 
-export const ModalComment = ({ onSubmit }) => {
+export const ModalComment = ({ onSubmit, setComment }) => {
   const modalRef = useRef(null);
 
   const handleSubmit = (event) => {
@@ -26,6 +26,7 @@ export const ModalComment = ({ onSubmit }) => {
           <Subheading>Deixe seu comentário sobre o post:</Subheading>
           <Textarea
             required
+            onChange={(({target}) => setComment(target.value))}
             rows={8}
             name="text"
             placeholder="Digite aqui..."

@@ -6,11 +6,14 @@ import Link from "next/link";
 import { ThumbsUpButton } from "./ThumbsUpButton";
 import { ModalComment } from "../ModalComment";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 
 export const CardPost = (props) => {
   const { post, highlight, rating, category, isFetching, currentPage } = props;
 
   const queryClient = useQueryClient();
+
+  const [comment, setComment] = useState('');
 
   const { mutate, isError } = useMutation({
     mutationFn: async (postData) => {
@@ -36,6 +39,32 @@ export const CardPost = (props) => {
       console.error(`Error ao salvar o slug ${variables.slug}`, { err });
     }
   })
+
+  const { mutate: mutateComment } = useMutation({
+    mutationFn: async (postData) => {
+      return await fetch(`http://localhost:3000/api/comment/${post.id}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postData)
+      }).then(res => {
+        if (!res.ok){
+          throw new Error('Falha ao salvar o like');
+        }
+
+        return res.json();
+      })
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries('post', post.slug);
+      queryClient.invalidateQueries('posts', currentPage);
+    },
+    onError: (err, variables) => {
+      console.error(`Error ao salvar o slug ${variables.slug}`, { err });
+    }
+  })
+
   return (
     <article className={styles.card} style={{ width: highlight ? 993 : 486 }}>
       <header className={styles.header}>
@@ -64,7 +93,10 @@ export const CardPost = (props) => {
           </form>
             {isError && <p style={{position: 'absolute', bottom: '0', width: '300px'}}>Erro ao salvar o like</p>}
           <div>
-            <ModalComment />
+            <ModalComment onSubmit={(e) => {
+              e.preventDefault();
+              mutateComment({ id: post.id, text: comment });
+            }} setComment={setComment} />
             <p>{post.comments.length}</p>
           </div>
           {rating && (
